@@ -62,6 +62,10 @@ typedef OHHTTPStubsResponse*(^OHHTTPStubsResponseBlock)(NSURLRequest* request);
 +(id<OHHTTPStubsDescriptor>)stubRequestsPassingTest:(OHHTTPStubsTestBlock)testBlock
                                    withStubResponse:(OHHTTPStubsResponseBlock)responseBlock;
 
++(id<OHHTTPStubsDescriptor>)stubRequestsPassingTest:(OHHTTPStubsTestBlock)testBlock
+                                            forOnce:(BOOL)forOnce
+                                   withStubResponse:(OHHTTPStubsResponseBlock)responseBlock;
+
 /*! Remove a stub from the list of stubs
  @param stubDesc the stub descriptor that has been returned when adding the stub using `stubRequestsPassingTest:withStubResponse:`
  @return `YES` if the stub has been successfully removed, `NO` if the parameter was not a valid stub identifier

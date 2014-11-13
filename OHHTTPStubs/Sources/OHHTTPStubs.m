@@ -50,6 +50,7 @@ static NSTimeInterval const kSlotTime = 0.25; // Must be >0. We will send a chun
 @interface OHHTTPStubsDescriptor : NSObject <OHHTTPStubsDescriptor>
 @property(atomic, copy) OHHTTPStubsTestBlock testBlock;
 @property(atomic, copy) OHHTTPStubsResponseBlock responseBlock;
+@property(atomic, assign) BOOL oneTimeStub;
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,8 +132,16 @@ static NSTimeInterval const kSlotTime = 0.25; // Must be >0. We will send a chun
 +(id<OHHTTPStubsDescriptor>)stubRequestsPassingTest:(OHHTTPStubsTestBlock)testBlock
                                    withStubResponse:(OHHTTPStubsResponseBlock)responseBlock
 {
+    return [self stubRequestsPassingTest:testBlock forOnce:NO withStubResponse:responseBlock];
+}
+
++ (id<OHHTTPStubsDescriptor>)stubRequestsPassingTest:(OHHTTPStubsTestBlock)testBlock
+                                             forOnce:(BOOL)forOnce
+                                    withStubResponse:(OHHTTPStubsResponseBlock)responseBlock
+{
     OHHTTPStubsDescriptor* stub = [OHHTTPStubsDescriptor stubDescriptorWithTestBlock:testBlock
                                                                        responseBlock:responseBlock];
+    stub.oneTimeStub = forOnce;
     [OHHTTPStubs.sharedInstance addStub:stub];
     return stub;
 }
@@ -293,7 +302,11 @@ static NSTimeInterval const kSlotTime = 0.25; // Must be >0. We will send a chun
 {
     // Make super sure that we never use a cached response.
     OHHTTPStubsProtocol* proto = [super initWithRequest:request cachedResponse:nil client:client];
-    proto.stub = [OHHTTPStubs.sharedInstance firstStubPassingTestForRequest:request];
+    OHHTTPStubsDescriptor* stub = [OHHTTPStubs.sharedInstance firstStubPassingTestForRequest:request];
+    if (stub.oneTimeStub) {
+        [OHHTTPStubs.sharedInstance removeStub:stub];
+    }
+    proto.stub = stub;
     return proto;
 }
 
